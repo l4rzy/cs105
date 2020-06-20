@@ -2,6 +2,11 @@
 var camera, scene, renderer;
 var geometry, material, mesh;
 var gui;
+var stats;
+
+// rotation values
+var rot_x = 0.01;
+var rot_y = 0.02;
 
 // gui settings
 var settings = {
@@ -29,18 +34,30 @@ function init() {
     renderer = new THREE.WebGLRenderer( { antialias: true } );
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
+	
+	// stats
+	stats = new Stats();
+	document.body.appendChild(stats.dom);
+	
+	// controls
+	var controls = new THREE.OrbitControls( camera, renderer.domElement );
+	controls.maxPolarAngle = Math.PI * 0.5;
+	controls.minDistance = 1;
+	controls.maxDistance = 100;
 
 	window.addEventListener( 'resize', onWindowResize, false );
 }
 
 function animate() {
     requestAnimationFrame( animate );
-
-    mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.02;
-
+	
+	if (settings.autorotate == true) {
+		mesh.rotation.x += 0.01;
+		mesh.rotation.y += 0.02;
+    }
+	
     renderer.render( scene, camera );
-
+	stats.update();
 }
 
 function onWindowResize() {
@@ -55,6 +72,7 @@ function initGUI() {
 	gui = new dat.GUI();
 	h = gui.addFolder("Common")
 	h.add( settings, 'scale', 0.0, 0.01, 0.001 ).onChange( guiChanged );
+	h.add(settings, 'autorotate');
 	h.add( settings, 'wireframe').onChange(materialChanged);
 	h = gui.addFolder("Geometry")
 	h.add( settings, 'geometry', ['cube', 'cone']).onChange(geometryChanged);
