@@ -7,7 +7,8 @@ var gui;
 var settings = {
 	'scale': 0.005,
 	'wireframe': false,
-	'geometries': 'cube'
+	'autorotate': true,
+	'geometry': 'cube'
 }
 
 init();
@@ -19,7 +20,6 @@ function init() {
     camera.position.z = 1;
 
     scene = new THREE.Scene();
-
     geometry = new THREE.BoxBufferGeometry( 0.4, 0.4, 0.4 );
     material = new THREE.MeshNormalMaterial();
 
@@ -57,7 +57,7 @@ function initGUI() {
 	h.add( settings, 'scale', 0.0, 0.01, 0.001 ).onChange( guiChanged );
 	h.add( settings, 'wireframe').onChange(materialChanged);
 	h = gui.addFolder("Geometry")
-	h.add( settings, 'geometries', ['cube', 'cone']).onChange(guiChanged);
+	h.add( settings, 'geometry', ['cube', 'cone']).onChange(geometryChanged);
 	guiChanged();
 }
 
@@ -69,5 +69,31 @@ function materialChanged() {
 	}
 }
 
+function geometryChanged() {
+	switch (settings.geometry) {
+		case 'cone':
+			geometry = new THREE.ConeBufferGeometry( 0.4, 0.4,0.4 );
+			mesh = new THREE.Mesh( geometry, material );
+			clearScene();
+			scene.add(mesh);
+			console.log('created cone');
+			break;
+		case 'cube':
+			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
+			mesh = new THREE.Mesh( geometry, material );
+			clearScene();
+			scene.add(mesh);
+			console.log('created cube');
+			break;
+	}
+}
+
 function guiChanged() {
+}
+
+/* utilities */
+function clearScene() {
+	while(scene.children.length > 0){ 
+		scene.remove(scene.children[0]); 
+	}
 }
