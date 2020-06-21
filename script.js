@@ -1,6 +1,6 @@
 // global variables
 var camera, scene, renderer;
-var floor, geometry, material, mesh, light, axes;
+var floor, geometry, material, mesh, floorMesh, light, axes;
 var gui;
 var stats;
 
@@ -23,7 +23,9 @@ var settings = {
 	},
 	'light': {
 		'enable': true,
-		'shadow': true
+		'shadow': true,
+		'automove': false,
+		'luminance': 4
 	},
 	'affine': {
 		'mode': 'none'
@@ -51,7 +53,7 @@ function init() {
 	// floor
 	floor = new THREE.PlaneBufferGeometry(5,5,32,32);
 	var floorMat = new THREE.MeshStandardMaterial( { color: 0x222222 } )
-	var floorMesh = new THREE.Mesh( floor, floorMat );
+	floorMesh = new THREE.Mesh( floor, floorMat );
 	floorMesh.receiveShadow = true;
 	floorMesh.rotation.x = - Math.PI / 2.0;
 	floorMesh.name = "floor";
@@ -133,14 +135,30 @@ function initGUI() {
 	h.add(settings['common'], 'autorotate');
 
 	h = gui.addFolder("Geometry")
-	h.add(settings['geometry'], 'mat', ['basic', 'line', 'dot', 'shading']).onChange(matChanged);
+	h.add(settings['geometry'], 'mat', ['basic', 'line', 'dot', 'normal', 'shading']).onChange(matChanged);
 	h.add( settings['geometry'], 'shape', ['cube', 'cone']).onChange(geometryChanged);
 	h = gui.addFolder("Light")
 	h.add(settings['light'], 'enable').onChange(function() {
 		if (settings['light'].enable == true) {
-			renderer.shadowMap.enabled = true;
+			light.visible = true;
 		}
-		else renderer.shadowMap.enabled = false;
+		else light.visible = false;
+	});
+
+	h.add(settings['light'], 'shadow').onChange(function() {
+		if (settings['light'].shadow == false) {
+			console.log("no shadows");
+			floorMesh.receiveShadow = false;
+			light.castShadow = false;
+		}
+		else {
+			floorMesh.receiveShadow = true;
+			light.castShadow = true;
+		}
+	});
+
+	h.add(settings['light'], 'luminance', 4, 20, 0.1).onChange(function() {
+		light.power = settings['light'].luminance * Math.PI;
 	});
 
 	h = gui.addFolder('Affine')
@@ -193,6 +211,9 @@ function matChanged() {
 			break;
 		case 'dot':
 			//TBD
+			break;
+		case 'normal':
+			material = new THREE.MeshNormalMaterial();
 			break;
 		case 'shading':
 			material = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x009900, shininess: 10, flatShading: true } );
