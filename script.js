@@ -134,7 +134,7 @@ function initGUI() {
 
 	h = gui.addFolder("Geometry")
 	h.add(settings['geometry'], 'mat', ['basic', 'line', 'dot', 'shading']).onChange(matChanged);
-	h.add( settings['geometry'], 'shape', ['cube', 'cone']).onChange(geometryChanged);
+	h.add( settings['geometry'], 'shape', ['cube', 'cone','sphere','torus','cylinder']).onChange(geometryChanged);
 	h = gui.addFolder("Light")
 	h.add(settings['light'], 'enable').onChange(function() {
 		if (settings['light'].enable == true) {
@@ -153,6 +153,15 @@ function geometryChanged() {
 			geometry = new THREE.ConeBufferGeometry( 0.4, 0.4,0.4 );
 			break;
 		case 'cube':
+			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
+			break;
+		case 'sphere':
+			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
+			break;
+		case 'torus':
+			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
+			break;
+		case 'cylinder':
 			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
 			break;
 	}
