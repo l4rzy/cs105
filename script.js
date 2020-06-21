@@ -121,7 +121,7 @@ function onWindowResize() {
 function initGUI() {
 	gui = new dat.GUI();
 	h = gui.addFolder("Common")
-	h.add( settings['common'], 'scale', 0.0, 0.01, 0.001 ).onChange( guiChanged );
+	h.add( settings['common'], 'scale', 0.0, 0.01, 0.001 );
 	h.add(settings['common'], 'showaxes').onChange(function() {
 		if (settings['common'].showaxes == true) {
 			axes.visible = true;
@@ -145,8 +145,6 @@ function initGUI() {
 
 	h = gui.addFolder('Affine')
 	h.add(settings['affine'], 'mode', ['none', 'translate', 'rotate', 'scale']).onChange(affineChanged);
-
-	guiChanged();
 }
 
 function geometryChanged() {
