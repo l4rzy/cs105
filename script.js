@@ -4,7 +4,8 @@ var floor, geometry, material, mesh, light, axes;
 var gui;
 var stats;
 
-var afControl;
+// controls 
+var obControl, afControl;
 // rotation values
 var rot_x = 0.01;
 var rot_y = 0.02;
@@ -18,14 +19,14 @@ var settings = {
 	},
 	'geometry': {
 		'shape': 'cube',
-		'wireframe': false
+		'mat': 'basic'
 	},
 	'light': {
 		'enable': true,
 		'shadow': true
 	},
 	'affine': {
-		'mode': 'traslate'
+		'mode': 'none'
 	}
 
 }
@@ -42,8 +43,7 @@ function init() {
 	// main object
     geometry = new THREE.BoxBufferGeometry( 0.4, 0.4, 0.4 );
     material = new THREE.MeshNormalMaterial();
-    phongMat = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x009900, shininess: 10, flatShading: true } );
-    mesh = new THREE.Mesh( geometry, phongMat );
+    mesh = new THREE.Mesh( geometry, material );
     mesh.castShadow = true;
     mesh.receiveShadow = false;
 	mesh.name = "object";
@@ -63,14 +63,13 @@ function init() {
 	light.castShadow = true;            // default false
 
 	// axesHelper
-	axes = new THREE.AxesHelper( 5 );
+	axes = new THREE.GridHelper( 100, 2 );
 
 	// add object and floor to scene
     scene.add(floorMesh);
 	scene.add( mesh );
 	scene.add( light );
 	scene.add( axes );
-
     renderer = new THREE.WebGLRenderer( { antialias: true } );
    	renderer.shadowMap.enabled = true;
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -87,7 +86,15 @@ function init() {
 	controls.maxDistance = 10;
 
 	afControl = new THREE.TransformControls( camera, renderer.domElement );
+	afControl.addEventListener( 'change', function() {
+		renderer.render(scene, camera);
+	} );
+	afControl.addEventListener( 'dragging-changed', function ( event ) {
+		controls.enabled = ! event.value;
+	} );
 
+	//afControl.attach(mesh);
+	scene.add(afControl);
 	window.addEventListener( 'resize', onWindowResize, false );
 }
 
@@ -126,7 +133,7 @@ function initGUI() {
 	h.add(settings['common'], 'autorotate');
 
 	h = gui.addFolder("Geometry")
-	h.add( settings['geometry'], 'wireframe').onChange(materialChanged);
+	h.add(settings['geometry'], 'mat', ['basic', 'line', 'dot', 'shading']).onChange(matChanged);
 	h.add( settings['geometry'], 'shape', ['cube', 'cone']).onChange(geometryChanged);
 	h = gui.addFolder("Light")
 	h.add(settings['light'], 'enable').onChange(function() {
@@ -137,48 +144,64 @@ function initGUI() {
 	});
 
 	h = gui.addFolder('Affine')
-	h.add(settings['affine'], 'mode', ['translate', 'rotate', 'scale']).onChange(affineChanged);
+	h.add(settings['affine'], 'mode', ['none', 'translate', 'rotate', 'scale']).onChange(affineChanged);
 
 	guiChanged();
-}
-
-function materialChanged() {
-	if ( material.wireframe == false) {
-		material.wireframe = true;
-	} else {
-		material.wireframe = false;
-	}
 }
 
 function geometryChanged() {
 	switch (settings['geometry'].shape) {
 		case 'cone':
 			geometry = new THREE.ConeBufferGeometry( 0.4, 0.4,0.4 );
-			mesh = new THREE.Mesh( geometry, material );
-		    mesh.castShadow = true;
-		    mesh.receiveShadow = false;
-			mesh.name = "object";
-			clearGeometry();
-			scene.add(mesh);
-			console.log('created cone');
 			break;
 		case 'cube':
 			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
-			mesh = new THREE.Mesh( geometry, material );
-		    mesh.castShadow = true;
-		    mesh.receiveShadow = false;
-			mesh.name = "object";
-			clearGeometry();
-			scene.add(mesh);
-			console.log('created cube');
+			break;
+	}
+
+	updateMesh(geometry, material);
+}
+
+function affineChanged() {
+	switch (settings['affine'].mode) {
+		case 'none':
+			console.log('detached');
+			afControl.detach();
+			break;
+		case 'translate':
+			console.log("translating");
+			afControl.setMode('translate');
+			afControl.attach(mesh);
+			break;
+		case 'rotate':
+			afControl.setMode('rotate');
+			afControl.attach(mesh);
+			break;
+		case 'scale':
+			afControl.setMode('scale');
+			afControl.attach(mesh);
 			break;
 	}
 }
 
-function guiChanged() {
-}
+function matChanged() {
+	switch (settings['geometry'].mat) {
+		case 'basic':
+			material = new THREE.MeshBasicMaterial( { color: 0x222222 } )
+			break;
+		case 'line':
+			material = new THREE.MeshNormalMaterial();
+			material.wireframe = true;
+			break;
+		case 'dot':
+			//TBD
+			break;
+		case 'shading':
+			material = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x009900, shininess: 10, flatShading: true } );
+			break;
+	}
 
-function affineChanged() {
+	updateMesh(geometry, material);
 }
 
 /* utilities */
@@ -187,4 +210,13 @@ function clearGeometry() {
 		if (scene.children[i].name == "object")
 			scene.remove(scene.children[i]); 
 	}
+}
+
+function updateMesh(g, m) {
+	mesh = new THREE.Mesh( g, m );
+    mesh.castShadow = true;
+    mesh.receiveShadow = false;
+	mesh.name = "object";
+	clearGeometry();
+	scene.add(mesh);
 }
