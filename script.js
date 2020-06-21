@@ -156,13 +156,13 @@ function geometryChanged() {
 			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
 			break;
 		case 'sphere':
-			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
+			geometry = new THREE.SphereBufferGeometry( 0.5, 50, 50 );
 			break;
 		case 'torus':
-			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
+			geometry = new THREE.TorusBufferGeometry( 0.4, 0.2 , 40 ,40 );
 			break;
 		case 'cylinder':
-			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
+			geometry = new THREE.CylinderBufferGeometry( 0.2, 0.2, 0.4 , 30, 30 );
 			break;
 	}
 
