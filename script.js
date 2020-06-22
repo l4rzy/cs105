@@ -13,7 +13,7 @@ var rot_y = 0.02;
 // gui settings
 var settings = {
 	'common': {
-		'scale': 0.005,
+		'scale': 1,
 		'autorotate': true,
 		'showaxes': true
 	},
@@ -123,7 +123,9 @@ function onWindowResize() {
 function initGUI() {
 	gui = new dat.GUI();
 	h = gui.addFolder("Common")
-	h.add( settings['common'], 'scale', 0.0, 0.01, 0.001 );
+	h.add( settings['common'], 'scale', 0.1, 1, 0.1 ).onChange(function() {
+		mesh.scale.set(settings['common'].scale, settings['common'].scale, settings['common'].scale);
+	});
 	h.add(settings['common'], 'showaxes').onChange(function() {
 		if (settings['common'].showaxes == true) {
 			axes.visible = true;
@@ -154,6 +156,7 @@ function initGUI() {
 		else {
 			floorMesh.receiveShadow = true;
 			light.castShadow = true;
+			mesh.castShadow = true;
 		}
 	});
 
@@ -219,7 +222,20 @@ function matChanged() {
 			material.wireframe = true;
 			break;
 		case 'dot':
-			//TBD
+			var texture = new THREE.TextureLoader().load('http://i.imgur.com/3tU4Vig.jpg',
+				function ( texture ) {
+			        // do something with the texture
+			        material = new THREE.MeshBasicMaterial( {
+			            map: texture
+			        } );
+    			},
+    			undefined,
+    			function (err) {
+    				console.log(err);
+    			}
+
+    		);
+			material = new THREE.MeshBasicMaterial( { map: texture } );
 			break;
 		case 'normal':
 			material = new THREE.MeshNormalMaterial();
@@ -240,11 +256,54 @@ function clearGeometry() {
 	}
 }
 
+function clearAffine() {
+	afControl.detach();
+	settings['affine'].mode = 'none';
+}
+
 function updateMesh(g, m) {
-	mesh = new THREE.Mesh( g, m );
-    mesh.castShadow = true;
-    mesh.receiveShadow = false;
-	mesh.name = "object";
+	clearAffine();
 	clearGeometry();
+	mesh = new THREE.Mesh( g, m );
+	if (settings['light'].shadow == true) {
+	    mesh.castShadow = true;
+	    mesh.receiveShadow = false;
+	}
+	mesh.name = "object";
 	scene.add(mesh);
+}
+
+function genDotMaterial() {
+	var canvas = document.createElement( 'canvas' );
+	canvas.width = 64;
+	canvas.height = 64;
+
+	var ctx = canvas.getContext("2d");
+	ctx.beginPath();
+	ctx.arc(16,16,12,0,2*Math.PI);
+	ctx.stroke();
+
+	var texture = THREE.CanvasTexture(canvas);
+	var mat = new THREE.MeshBasicMaterial({
+	    map: texture,
+	 });
+	return mat;
+}
+
+function initDragAndDrop() {
+	document.addEventListener( 'dragover', function ( event ) {
+		event.preventDefault();
+		event.dataTransfer.dropEffect = 'copy';
+	}, false );
+
+	document.addEventListener( 'drop', function ( event ) {
+		event.preventDefault();
+
+		// load file
+		var reader = new FileReader();
+		reader.addEventListener( 'load', function ( ev ) {
+			handleJPG( ev );
+		}, false );
+		reader.readAsDataURL( event.dataTransfer.files[ 0 ] );
+	}, false );
 }
