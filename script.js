@@ -148,7 +148,7 @@ function initGUI() {
 	h.add(settings['common'], 'autorotate');
 
 	h = gui.addFolder("Geometry")
-	h.add(settings['geometry'], 'mat', ['normal', 'line', 'custom', 'basic', 'shading', 'lambert']).onChange(matChanged);
+	h.add(settings['geometry'], 'mat', ['normal', 'line', 'custom', 'basic', 'shading', 'lambert', 'wire_lambert']).onChange(matChanged);
 	h.add( settings['geometry'], 'shape', ['cube', 'cone','sphere','torus','cylinder']).onChange(geometryChanged);
 	h = gui.addFolder("Light")
 	h.add(settings['light'], 'enable').onChange(function() {
@@ -278,6 +278,9 @@ function matChanged() {
 			break;
 		case 'lambert':
 			material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: false } );
+			break;
+		case 'wire_lambert':
+			material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: true } );
 			break;
 	}
 
