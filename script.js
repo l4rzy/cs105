@@ -9,6 +9,7 @@ var obControl, afControl;
 // rotation values
 var rot_x = 0.01;
 var rot_y = 0.02;
+var alpha = 0;
 
 // gui settings
 var settings = {
@@ -23,6 +24,7 @@ var settings = {
 	},
 	'light': {
 		'enable': true,
+		'autorotate': false,
 		'shadow': true,
 		'automove': false,
 		'luminance': 4
@@ -108,6 +110,15 @@ function animate() {
 		mesh.rotation.y += 0.02;
     }
 	
+	if (settings['light'].autorotate == true) {
+		alpha = Math.PI * 0.01 + alpha
+		var new_x = Math.sin(alpha);
+		var new_z = Math.cos(alpha);
+		
+		light.position.set(new_x, 1, new_z);
+		if (alpha == 2 * Math.PI) alpha = 0;
+	}
+	
     renderer.render( scene, camera );
 	stats.update();
 }
@@ -137,7 +148,7 @@ function initGUI() {
 	h.add(settings['common'], 'autorotate');
 
 	h = gui.addFolder("Geometry")
-	h.add(settings['geometry'], 'mat', ['basic', 'line', 'dot', 'normal', 'shading']).onChange(matChanged);
+	h.add(settings['geometry'], 'mat', ['normal', 'line', 'custom', 'basic', 'shading', 'lambert']).onChange(matChanged);
 	h.add( settings['geometry'], 'shape', ['cube', 'cone','sphere','torus','cylinder']).onChange(geometryChanged);
 	h = gui.addFolder("Light")
 	h.add(settings['light'], 'enable').onChange(function() {
@@ -145,6 +156,12 @@ function initGUI() {
 			light.visible = true;
 		}
 		else light.visible = false;
+	});
+	
+	h.add(settings['light'], 'autorotate').onChange(function() {
+		if (settings['light'].autorotate == true) {
+			console.log('rotating light');
+		}
 	});
 
 	h.add(settings['light'], 'shadow').onChange(function() {
@@ -171,10 +188,10 @@ function initGUI() {
 function geometryChanged() {
 	switch (settings['geometry'].shape) {
 		case 'cone':
-			geometry = new THREE.ConeBufferGeometry( 0.4, 0.4,0.4 );
+			geometry = new THREE.ConeBufferGeometry( 0.4, 0.4, 32, 32);
 			break;
 		case 'cube':
-			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4,0.4 );
+			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4, 0.4 );
 			break;
 		case 'sphere':
 			geometry = new THREE.SphereBufferGeometry( 0.5, 50, 50 );
@@ -185,8 +202,20 @@ function geometryChanged() {
 		case 'cylinder':
 			geometry = new THREE.CylinderBufferGeometry( 0.2, 0.2, 0.4 , 30, 30 );
 			break;
-	}
+		case 'custom':
+			var curve = new THREE.QuadraticBezierCurve3(
+				new THREE.Vector3( -10, 0, 0 ),
+				new THREE.Vector3( 20, 15, 0 ),
+				new THREE.Vector3( 10, 0, 0 )
+			);
 
+			var points = curve.getPoints( 50 );
+			geometry = new THREE.BufferGeometry().setFromPoints( points );
+			material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+			console.log('created geometry from curve');
+			break;
+
+	}
 	updateMesh(geometry, material);
 }
 
@@ -221,10 +250,14 @@ function matChanged() {
 			material = new THREE.MeshNormalMaterial();
 			material.wireframe = true;
 			break;
-		case 'dot':
-			var texture = new THREE.TextureLoader().load('http://i.imgur.com/3tU4Vig.jpg',
+		case 'custom':
+			var texture = new THREE.TextureLoader().load('https://i.imgur.com/e69Z1hI.jpg',
 				function ( texture ) {
 			        // do something with the texture
+					texture.wrapS = THREE.RepeatWrapping;
+					texture.wrapT = THREE.RepeatWrapping;
+					texture.repeat.set( 20, 20 );
+			
 			        material = new THREE.MeshBasicMaterial( {
 			            map: texture
 			        } );
@@ -242,6 +275,9 @@ function matChanged() {
 			break;
 		case 'shading':
 			material = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x009900, shininess: 10, flatShading: true } );
+			break;
+		case 'lambert':
+			material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: false } );
 			break;
 	}
 
