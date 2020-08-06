@@ -46,7 +46,7 @@ function init() {
 	
 	// main object
     geometry = new THREE.BoxBufferGeometry( 0.4, 0.4, 0.4 );
-    material = new THREE.MeshNormalMaterial();
+    material = new THREE.MeshBasicMaterial( { color: 0x222222 } )
     mesh = new THREE.Mesh( geometry, material );
     mesh.castShadow = true;
     mesh.receiveShadow = false;
