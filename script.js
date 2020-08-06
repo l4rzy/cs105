@@ -20,7 +20,7 @@ var settings = {
 	},
 	'geometry': {
 		'shape': 'cube',
-		'mat': 'basic'
+		'material': 'basic'
 	},
 	'light': {
 		'enable': true,
@@ -134,7 +134,7 @@ function onWindowResize() {
 function initGUI() {
 	gui = new dat.GUI();
 	h = gui.addFolder("Common")
-	h.add( settings['common'], 'scale', 0.1, 1, 0.1 ).onChange(function() {
+	h.add( settings['common'], 'scale', 0.1, 2, 0.1 ).onChange(function() {
 		mesh.scale.set(settings['common'].scale, settings['common'].scale, settings['common'].scale);
 	});
 	h.add(settings['common'], 'showaxes').onChange(function() {
@@ -148,8 +148,8 @@ function initGUI() {
 	h.add(settings['common'], 'autorotate');
 
 	h = gui.addFolder("Geometry")
-	h.add(settings['geometry'], 'mat', ['normal', 'line', 'custom', 'basic', 'shading', 'lambert', 'wire_lambert']).onChange(matChanged);
-	h.add( settings['geometry'], 'shape', ['cube', 'cone','sphere','torus','cylinder']).onChange(geometryChanged);
+	h.add(settings['geometry'], 'material', ['basic', 'normal', 'line', 'texture 1', 'texture 2', 'phong shading', 'lambert shading', 'wire lambert']).onChange(matChanged);
+	h.add( settings['geometry'], 'shape', ['cube', 'cone','sphere','torus','cylinder', 'teapot']).onChange(geometryChanged);
 	h = gui.addFolder("Light")
 	h.add(settings['light'], 'enable').onChange(function() {
 		if (settings['light'].enable == true) {
@@ -191,16 +191,19 @@ function geometryChanged() {
 			geometry = new THREE.ConeBufferGeometry( 0.4, 0.4, 32, 32);
 			break;
 		case 'cube':
-			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4, 0.4 );
+			geometry = new THREE.BoxBufferGeometry( 0.4, 0.4, 0.4);
 			break;
 		case 'sphere':
-			geometry = new THREE.SphereBufferGeometry( 0.5, 50, 50 );
+			geometry = new THREE.SphereBufferGeometry( 0.4, 50, 50 );
 			break;
 		case 'torus':
 			geometry = new THREE.TorusBufferGeometry( 0.4, 0.2 , 40 ,40 );
 			break;
 		case 'cylinder':
-			geometry = new THREE.CylinderBufferGeometry( 0.2, 0.2, 0.4 , 30, 30 );
+			geometry = new THREE.CylinderBufferGeometry( 0.4, 0.4, 0.8 , 32, 32 );
+			break;
+		case 'teapot':
+			geometry = new THREE.TeapotBufferGeometry(0.4, true, true, true, true, true);
 			break;
 		case 'custom':
 			var curve = new THREE.QuadraticBezierCurve3(
@@ -242,7 +245,7 @@ function affineChanged() {
 }
 
 function matChanged() {
-	switch (settings['geometry'].mat) {
+	switch (settings['geometry'].material) {
 		case 'basic':
 			material = new THREE.MeshBasicMaterial( { color: 0x222222 } )
 			break;
@@ -250,13 +253,33 @@ function matChanged() {
 			material = new THREE.MeshNormalMaterial();
 			material.wireframe = true;
 			break;
-		case 'custom':
+		case 'texture 1':
 			var texture = new THREE.TextureLoader().load('https://i.imgur.com/e69Z1hI.jpg',
 				function ( texture ) {
 			        // do something with the texture
 					texture.wrapS = THREE.RepeatWrapping;
 					texture.wrapT = THREE.RepeatWrapping;
-					texture.repeat.set( 20, 20 );
+					texture.repeat.set( 10, 10 );
+			
+			        material = new THREE.MeshBasicMaterial( {
+			            map: texture
+			        } );
+    			},
+    			undefined,
+    			function (err) {
+    				console.log(err);
+    			}
+
+    		);
+			material = new THREE.MeshBasicMaterial( { map: texture } );
+			break;
+		case 'texture 2':
+			var texture = new THREE.TextureLoader().load('https://i.imgur.com/OIasWMD.jpg',
+				function ( texture ) {
+			        // do something with the texture
+					texture.wrapS = THREE.RepeatWrapping;
+					texture.wrapT = THREE.RepeatWrapping;
+					texture.repeat.set( 1, 1 );
 			
 			        material = new THREE.MeshBasicMaterial( {
 			            map: texture
@@ -273,13 +296,13 @@ function matChanged() {
 		case 'normal':
 			material = new THREE.MeshNormalMaterial();
 			break;
-		case 'shading':
+		case 'phong shading':
 			material = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x009900, shininess: 10, flatShading: true } );
 			break;
-		case 'lambert':
+		case 'lambert shading':
 			material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: false } );
 			break;
-		case 'wire_lambert':
+		case 'wire lambert':
 			material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: true } );
 			break;
 	}
